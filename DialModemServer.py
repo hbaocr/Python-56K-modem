@@ -65,7 +65,9 @@ class ModemServer(object):
             # Start read thread
             self.alive = True 
             self.rxThread = threading.Thread(target=self._readLoop)
-            self.rxThread.daemon = True # thread will be exited if the main thread is exitted
+            
+            #self.rxThread.daemon = True # if enable this flag read_loop thread will be exited if the main thread is exitted
+            
             self.rxThread.start()
 
             self.stage = ModemStage.INIT
@@ -166,7 +168,7 @@ class ModemServer(object):
 
         self.incomingModemDataCallback = onIncommingData
         self.stage = ModemStage.WAITING_RING
-        logging.debug("Waiting for RING RING")
+        logging.debug("Waiting for RING RING(incoming call)")
 
   
     def _handleWaitingRing(self,modem_response,expectedTimeout=60):
@@ -206,6 +208,7 @@ class ModemServer(object):
                         self._handleWaitingRing(modem_response)
                         self._handleConnected(modem_response)
                         self._handleNoCarrier(modem_response)
+    
                         self.incomingModemDataCallback(self,self.isDataMode,self.getRxBuff)
 
 

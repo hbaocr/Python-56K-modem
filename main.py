@@ -12,11 +12,11 @@ def inCommingData(modem:DialModemServer.ModemServer,isDataMode,Databuff):
     if(isDataMode):
         data=modem.getRxBuffString()
         print(data)
-        modem.sendData("Welcome to new connection")
+        modem.sendData("ACK")
         modem.clearRxBuff()
         
 
 
 modem.start(inCommingData)
 
-time.sleep(300)
+#time.sleep(120)

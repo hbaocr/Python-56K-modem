@@ -31,10 +31,11 @@ class ModemStage(enum.Enum):
 class ModemServer(object):
     _read_timeout=0.3  #sec
     _write_timeout=3 #sec
-    def __init__(self, port, baudrate=9600, fatalErrorCallbackFunc=None, *args, **kwargs):
+    def __init__(self, port, baudrate=9600,readSize=1024, fatalErrorCallbackFunc=None, *args, **kwargs):
         self.alive = False
         self.port = port
         self.baudrate = baudrate
+        self.readsize=readSize
 
         self._txLock = threading.RLock()
         self._rxLock = threading.RLock()
@@ -180,7 +181,7 @@ class ModemServer(object):
         
     def _handleNoCarrier(self,modem_response,expectedTimeout=60):
         if (NO_CARRIER_RESPONSE in modem_response):
-            logging.debug("Hang up the call")
+            logging.debug("Hang up the call. Wait for another RING RING")
             self.clearRxBuff()
             self.isDataMode= False
     
@@ -198,7 +199,7 @@ class ModemServer(object):
         try:
             logging.info("....start loop to read serial port : " + self.port)
             while self.alive:
-                data = self.serial.read(128)
+                data = self.serial.read(self.readsize)
                 if data != b'': # check timeout
                     for by in data:
                         self.appendRxBuff(by)

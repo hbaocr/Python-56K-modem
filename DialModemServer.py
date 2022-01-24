@@ -29,7 +29,7 @@ class ModemStage(enum.Enum):
     DATA_MODE=4
 
 class ModemServer(object):
-    _read_timeout=0.5  #sec
+    _read_timeout=0.3  #sec
     _write_timeout=3 #sec
     def __init__(self, port, baudrate=9600, fatalErrorCallbackFunc=None, *args, **kwargs):
         self.alive = False
@@ -85,13 +85,9 @@ class ModemServer(object):
     def getRxBuff(self):
         return self._rx_buff
     
-    def getRxBuffString(self):
-        data=[]
-        for ele in self._rx_buff:
-            if ele[0] <=127:
-                data.append(ele)
-
-        return "".join([ele.decode('utf8') for ele in data])
+    def getRxBuffString(self):     
+        return "".join([(chr(ele) if ele <=127 else '') for ele in self._rx_buff])
+        #return "".join([ele.decode('utf8') for ele in data])
         #return self._rx_buff.decode("utf-8")
 
     def toggleDTR(self,dly=0.3):
@@ -170,6 +166,7 @@ class ModemServer(object):
 
         self.incomingModemDataCallback = onIncommingData
         self.stage = ModemStage.WAITING_RING
+        logging.debug("Waiting for RING RING")
 
   
     def _handleWaitingRing(self,modem_response,expectedTimeout=60):
@@ -199,9 +196,11 @@ class ModemServer(object):
         try:
             logging.info("....start loop to read serial port : " + self.port)
             while self.alive:
-                data = self.serial.read(1)
+                data = self.serial.read(128)
                 if data != b'': # check timeout
-                    self.appendRxBuff(data)
+                    for by in data:
+                        self.appendRxBuff(by)
+
                     if self.stage == ModemStage.WAITING_RING:
                         modem_response = self.getRxBuffString()
                         self._handleWaitingRing(modem_response)
